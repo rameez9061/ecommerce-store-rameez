@@ -15,7 +15,7 @@ const ProductHard = ({product}:Props) => {
     <div className='border border-gray-300 rounded-lg overflow-hidden group text-sm'>
      <div className='border-b border-b-gray-300 overflow-hidden relative'>
         {product?.image && (
-            <Link href={`Product/${product?.slug?.current}`}>
+            <Link href={`https://ecommerce-store-rameez.vercel.app/Product/${product?.slug?.current}`}>
             <Image src={urlFor(product?.image).url()} alt='image' width={500} height={500} loading='lazy' className='w-full max-h-96 object-cover overflow-hidden transition-transform group-hover:scale-105 duration-500'/>
             </Link>
         )}
