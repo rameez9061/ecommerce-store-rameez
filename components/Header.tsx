@@ -27,7 +27,7 @@ export default async function Header() {
    <header className='w-full bg-white py-4 border-b border-gray-400 sticky top-0 z-50'>
 <Container className='flex md:items-center justify-between gap-5 flex-col md:flex-row'>
 <Link  href={'/'}>
-<Image src={logo} alt="logo" className='w-24' priority/>
+<Image src={logo} alt="logo" className='w-12' priority/>
 </Link>
 <Form action="/search"  className='flex-1 '>
     <input type="text" name='query'  placeholder='Search For Products......' className='w-full border-2 border-gray-200 px-4 py-2.5 rounded-md focus-visible:border-darkBlue outline-none' />
