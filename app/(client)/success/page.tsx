@@ -3,18 +3,31 @@
 
 import userCartStore from '@/store'
 import { useSearchParams } from 'next/navigation'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import {motion} from "framer-motion"
 import { Check, Home, Package, ShoppingBag } from 'lucide-react'
 import Link from 'next/link'
 
+interface ADDRESS{
+      city:string,
+      country:string,
+      postalCode:string,
+      street:string
+}
 const SuccessPage = () => {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("orderNumber");
+  const [userAddress, setUserAddress] = useState<ADDRESS | null>(null);
+  
   const clearCart = userCartStore((state) => state.resetCart)
   useEffect(()=>{
     if(orderNumber){
 clearCart()
+    }
+    const address = localStorage.getItem("address");
+    const storedData:ADDRESS | null = address ? JSON.parse(address) : null;
+    if (storedData) {
+      setUserAddress(storedData);
     }
   },[orderNumber , clearCart])
   return (
@@ -25,7 +38,11 @@ clearCart()
         </motion.div>
       <h1 className='text-3xl font-bold text-gray-800 mb-4 '>Order Confirmed!</h1>
       <div className='space-y-4 mb-8 text-left text-gray-600'>
-        <p>Thank you for your Purchase. We&apos;re processing your order and will ship it soon. A confirmation email with your order details will be sent to your inbox shortly.</p>
+        <p>Thank you for your Purchase. We&apos;re processing your order and will ship it soon on this Address </p>
+        <p className='mb-1'>City: <span>{userAddress?.city}</span></p>
+        <p className='mb-1'>Country: <span>{userAddress?.country}</span></p>
+        <p className='mb-1'>Postal-Code: <span>{userAddress?.postalCode}</span></p>
+        <p className='mb-4'>Street: <span>{userAddress?.street}</span></p>
         <p>Order Number : <span className='text-black font-semibold'>{orderNumber}</span></p>
       </div>
       <div className='bg-green-50 border border-green-200 rounded-lg p-4 mb-4'>
@@ -59,3 +76,4 @@ clearCart()
 }
 
 export default SuccessPage
+
