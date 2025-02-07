@@ -8,6 +8,7 @@ import NoAccessToCart from "@/components/NoAccessToCart";
 import PriceFormatter from "@/components/PriceFormatter";
 import QuantityButtons from "@/components/QuantityButtons";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { urlFor } from "@/sanity/lib/image";
 import userCartStore from "@/store";
@@ -28,13 +29,32 @@ const CartPage = () => {
   } = userCartStore();
   const [isClient, setIsClient] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [address, setAddress] = useState({
+    street: "",
+    city: "",
+    postalCode: "",
+    country: "",
+  });
+  const [addressValid, setAddressValid] = useState(true);
   const groupedItems = userCartStore((state) => state.getGroupedItems());
   const { user } = useUser();
   const { isSignedIn } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
+
+    // Retrieve address from localStorage if it exists
+    const storedAddress = localStorage.getItem("address");
+    if (storedAddress) {
+      setAddress(JSON.parse(storedAddress));
+    }
   }, []);
+
+  useEffect(() => {
+    // Save address to localStorage whenever it changes
+    localStorage.setItem("address", JSON.stringify(address));
+  }, [address]);
+
   if (!isClient) {
     return <Loader />;
   }
@@ -51,15 +71,21 @@ const CartPage = () => {
       toast.success("Your cart has been reset Successfully!");
     }
   };
+//////////////////////////////////
 
+//////////////////////////////////////////////////////
   const handleCheckOut = async() => {
+    if (!address.street || !address.city || !address.postalCode || !address.country) {
+      setAddressValid(false);
+      return;
+    }
    setLoading(true)
    try {
     const metadata:MetaData={
       orderNumber:crypto.randomUUID(),
       customerName:user?.fullName ?? "Unknown",
       customerEmail:user?.emailAddresses[0]?.emailAddress ?? "Unknown",
-      clerkUserId:user?.id ?? "Unknown",
+      clerkUserId:user?.id ?? "Unknown", // Add address to the metadata
 
     }
 
@@ -105,6 +131,63 @@ const CartPage = () => {
                         <span>Total</span>
                         <PriceFormatter amount={getTotalPrice()} />
                       </div>
+                      <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+      <h3 className="text-2xl font-semibold text-center mb-6">Enter Your Address</h3>
+     
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Street Address"
+            value={address.street}
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+ 
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="City"
+            value={address.city}
+            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Postal Code"
+            value={address.postalCode}
+            onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Country"
+            value={address.country}
+            onChange={(e) => setAddress({ ...address, country: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {!addressValid && (
+          <p className="text-red-500 text-sm text-center mt-2">
+            Please complete all fields.
+          </p>
+        )}
+
+       
+     
+    </div>
+
                       <div className="flex flex-col">
                         <Button onClick={handleCheckOut} disabled={loading}>
                           {loading ? "Processing":"Procceed to Checkout"}
@@ -193,37 +276,97 @@ const CartPage = () => {
                     </Button>
                   </div>
                 </div>
-                <div className="md:hidden fixed bottom-0 left-0 w-full bg-white p-6 rounded-lg border">
-                  <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span>SubTotal Value</span>
-                      <PriceFormatter amount={getSubTotalPrice()} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>Discount Price</span>
-                      <PriceFormatter
-                        amount={getSubTotalPrice() - getTotalPrice()}
-                      />
-                    </div>
-                    <Separator />
-                    <div className="flex items-center justify-between">
-                      <span>Total</span>
-                      <PriceFormatter amount={getTotalPrice()} />
-                    </div>
-                    <div className="flex flex-col">
-                      <Button onClick={handleCheckOut}>
-                        Proceed to Checkout
-                      </Button>
-                      <Link
-                        href={"/"}
-                        className="text-center text-sm  text-primary hover:underline hover:text-darkBlue hoverEffect"
-                      >
-                        Continue Shopping
-                      </Link>
-                    </div>
-                  </div>
-                </div>
+                <ScrollArea className=" h-[200px] overflow-y-auto">
+  <div className="md:hidden fixed bottom-0 left-0 w-full bg-white p-6 rounded-lg border h-[200px] overflow-y-auto">
+    <h2 className="text-2xl font-semibold mb-4">Order Summary</h2>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span>SubTotal Value</span>
+        <PriceFormatter amount={getSubTotalPrice()} />
+      </div>
+      <div className="flex items-center justify-between">
+        <span>Discount Price</span>
+        <PriceFormatter amount={getSubTotalPrice() - getTotalPrice()} />
+      </div>
+      <Separator />
+      <div className="flex items-center justify-between">
+        <span>Total</span>
+        <PriceFormatter amount={getTotalPrice()} />
+      </div>
+
+      {/* Make the address form scrollable */}
+      <div className="max-w-xl mx-auto p-2 bg-white rounded-lg shadow-lg  ">
+        <h3 className="text-2xl font-semibold text-center mb-2">Enter Your Address</h3>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Street Address"
+            value={address.street}
+            onChange={(e) => setAddress({ ...address, street: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="City"
+            value={address.city}
+            onChange={(e) => setAddress({ ...address, city: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Postal Code"
+            value={address.postalCode}
+            onChange={(e) => setAddress({ ...address, postalCode: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        <div className="space-y-2 mt-1">
+          <input
+            type="text"
+            placeholder="Country"
+            value={address.country}
+            onChange={(e) => setAddress({ ...address, country: e.target.value })}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+        </div>
+
+        {!addressValid && (
+          <p className="text-red-500 text-sm text-center mt-2">
+            Please complete all fields.
+          </p>
+        )}
+
+      </div>
+
+      <div className="flex flex-col mt-4">
+        <Button onClick={handleCheckOut}>
+          Proceed to Checkout
+        </Button>
+        <Link
+          href={"/"}
+          className="text-center text-sm text-primary hover:underline hover:text-darkBlue hoverEffect"
+        >
+          Continue Shopping
+        </Link>
+      </div>
+    </div>
+  </div>
+  <ScrollBar orientation="vertical"/>
+</ScrollArea>
+
+
               </div>
             </>
           ) : (
@@ -238,3 +381,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+
